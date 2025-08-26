@@ -1,5 +1,19 @@
 # Multi-stage build for Spring Boot application
-FROM maven:3.9.5-eclipse-temurin-17 AS development
+FROM maven:3.9.5-eclipse-temurin-17 AS base
+
+# Set working directory
+WORKDIR /app
+
+# Copy pom.xml for dependency resolution
+COPY pom.xml .
+
+# Test stage
+FROM base AS test
+COPY src ./src
+CMD ["mvn", "test"]
+
+# Development stage
+FROM base AS development
 
 # Set working directory
 WORKDIR /app

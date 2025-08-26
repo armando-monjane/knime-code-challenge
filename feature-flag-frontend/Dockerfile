@@ -1,5 +1,19 @@
-# Multi-stage build for React application
-FROM node:18-alpine AS development
+FROM node:20-alpine AS base
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Test stage
+FROM base AS test
+RUN npm install
+COPY . .
+CMD ["npm", "test"]
+
+# Development stage
+FROM base AS development
 
 # Set working directory
 WORKDIR /app
@@ -18,7 +32,7 @@ EXPOSE 3000
 CMD ["npm", "start"]
 
 # Production build stage
-FROM node:18-alpine AS build
+FROM node:20-alpine AS build
 
 # Set working directory
 WORKDIR /app
@@ -36,7 +50,7 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production
 
 # Install curl for health checks
 RUN apk add --no-cache curl

@@ -1,0 +1,50 @@
+services:
+  feature-flag-frontend-test:
+    build:
+      context: ./feature-flag-frontend
+      dockerfile: Dockerfile
+      target: test
+    volumes:
+      - ./feature-flag-frontend:/app
+      - /app/node_modules
+    command: npm test
+    environment:
+      - CI=true
+      - NODE_ENV=test
+
+  movie-search-frontend-test:
+    build:
+      context: ./movie-search-frontend
+      dockerfile: Dockerfile
+      target: test
+    volumes:
+      - ./movie-search-frontend:/app
+      - /app/node_modules
+    command: npm test
+    environment:
+      - CI=true
+      - NODE_ENV=test
+
+  feature-flag-service-test:
+    build:
+      context: ./feature-flag-service
+      dockerfile: Dockerfile
+      target: test
+    volumes:
+      - ./feature-flag-service:/app
+      - /app/.m2
+    command: mvn test -Dspring.profiles.active=test
+    environment:
+      - SPRING_PROFILES_ACTIVE=test
+
+  movie-search-service-test:
+    build:
+      context: ./movie-search-service
+      dockerfile: Dockerfile
+      target: test
+    volumes:
+      - ./movie-search-service:/app
+      - /app/.m2
+    command: mvn test -Dspring.profiles.active=test
+    environment:
+      - SPRING_PROFILES_ACTIVE=test
