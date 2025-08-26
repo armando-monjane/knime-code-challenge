@@ -58,8 +58,8 @@ A microservices-based application demonstrating feature flag management and movi
 
 2. **Run with Docker Compose**
    ```bash
-   cp .env.example .env
-   docker-compose up -d
+   cp .env.example .env.dev
+   docker compose -f docker-compose.dev.yml --env-file .env.dev up -d
    ```
 
 3. **Access Applications**
