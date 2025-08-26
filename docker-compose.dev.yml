@@ -95,6 +95,8 @@ services:
       context: ./feature-flag-frontend
       dockerfile: Dockerfile
       target: development
+      args:
+        - REACT_APP_API_URL=${FEATURE_FLAG_API_URL}
     container_name: feature-flag-frontend-dev
     ports:
       - "3000:3000"
@@ -114,6 +116,8 @@ services:
       context: ./movie-search-frontend
       dockerfile: Dockerfile
       target: development
+      args:
+        - REACT_APP_API_URL=${MOVIES_API_URL}
     container_name: movie-search-frontend-dev
     ports:
       - "3001:3000"
