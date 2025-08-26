@@ -38,7 +38,6 @@ A microservices-based application demonstrating feature flag management and movi
 ### 4. Testing Strategy
 - **Unit Tests**: Core business logic
 - **Integration Tests**: API endpoints and database operations
-- **E2E Tests**: Complete user workflows
 - **Testcontainers**: Isolated test environments
 
 ## Prerequisites
@@ -72,6 +71,13 @@ A microservices-based application demonstrating feature flag management and movi
 
 ### Backend Services
 
+Start postgres and RabbitMQ containers
+
+```bash
+docker compose -f docker-compose.dev.yml --env-file .env.dev up -d postgres rabbitmq
+```
+
+
 1. **Feature Flag Service**
    ```bash
    cd feature-flag-service
@@ -81,7 +87,7 @@ A microservices-based application demonstrating feature flag management and movi
 2. **Movie Search Service**
    ```bash
    cd movie-search-service
-   mvn spring-boot:run
+   OMDB_API_KEY=demo_key mvn spring-boot:run
    ```
 
 ### Frontend Applications
@@ -146,6 +152,33 @@ The application supports two feature flags:
 - **Health Checks**: `/actuator/health` endpoints
 
 
+## Testing
+
+### Unit Tests and Integration Tests (backend)
+
+```bash
+cd feature-flag-service
+mvn test
+
+cd movie-search-service
+mvn test
+```
+
+### Unit Tests (frontend)
+
+```bash
+cd feature-flag-frontend
+npm test
+
+cd movie-search-frontend
+npm test
+```
+
+### Containerized Testing
+
+```bash
+docker compose -f docker-compose.test.yml up --build
+```
 
 
 

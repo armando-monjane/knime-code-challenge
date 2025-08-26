@@ -99,7 +99,7 @@
                         </exclude>
                     </excludes>
                     <jvmArguments>
-                        -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -Dspring-boot.run.fork=false
+                        -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006 -Dspring-boot.run.fork=false
                     </jvmArguments>
                 </configuration>
             </plugin>

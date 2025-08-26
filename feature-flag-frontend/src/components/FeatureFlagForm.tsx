@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { featureFlagService, FeatureFlag } from '../services/featureFlagService';
+import { featureFlagService } from '../services/featureFlagService';
 
 const FeatureFlagForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();

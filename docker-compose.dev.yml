@@ -74,7 +74,7 @@ services:
     container_name: movie-search-service-dev
     ports:
       - "8081:8081"
-      - "${JAVA_DEBUG_PORT_MOVIE_SEARCH}:5005" # Java Debug Port
+      - "${JAVA_DEBUG_PORT_MOVIE_SEARCH}:5006" # Java Debug Port
     volumes:
       - ./movie-search-service:/app
       - movie_search_service_m2:/root/.m2
