@@ -1,0 +1,142 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: feature-flags-postgres-dev
+    environment:
+      POSTGRES_DB: feature_flags
+      POSTGRES_USER: feature_flags_user
+      POSTGRES_PASSWORD: feature_flags_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U feature_flags_user -d feature_flags"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: feature-flags-rabbitmq-dev
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: feature_flags_user
+      RABBITMQ_DEFAULT_PASS: feature_flags_password
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+  # Feature Flag Service
+  feature-flag-service:
+    build:
+      context: ./feature-flag-service
+      dockerfile: Dockerfile
+      target: development
+    container_name: feature-flag-service-dev
+    ports:
+      - "8080:8080"
+      - "${JAVA_DEBUG_PORT_FEATURE_FLAGS}:5005" # Java Debug Port
+    volumes:
+      - ./feature-flag-service:/app
+      - feature_flag_service_m2:/root/.m2
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/feature_flags
+      SPRING_DATASOURCE_USERNAME: feature_flags_user
+      SPRING_DATASOURCE_PASSWORD: feature_flags_password
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: feature_flags_user
+      SPRING_RABBITMQ_PASSWORD: feature_flags_password
+      OMDB_API_KEY: ${OMDB_API_KEY:-demo_key}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  # Movie Search Service
+  movie-search-service:
+    build:
+      context: ./movie-search-service
+      dockerfile: Dockerfile
+      target: development
+    container_name: movie-search-service-dev
+    ports:
+      - "8081:8081"
+      - "${JAVA_DEBUG_PORT_MOVIE_SEARCH}:5005" # Java Debug Port
+    volumes:
+      - ./movie-search-service:/app
+      - movie_search_service_m2:/root/.m2
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: feature_flags_user
+      SPRING_RABBITMQ_PASSWORD: feature_flags_password
+      OMDB_API_KEY: ${OMDB_API_KEY:-demo_key}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  # Feature Flag Frontend
+  feature-flag-frontend:
+    build:
+      context: ./feature-flag-frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: feature-flag-frontend-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./feature-flag-frontend:/app
+      - /app/node_modules
+    environment:
+      REACT_APP_API_URL: ${FEATURE_FLAG_API_URL}
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    depends_on:
+      - feature-flag-service
+
+  # Movie Search Frontend
+  movie-search-frontend:
+    build:
+      context: ./movie-search-frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: movie-search-frontend-dev
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./movie-search-frontend:/app
+      - /app/node_modules
+    environment:
+      REACT_APP_API_URL: ${MOVIES_API_URL}
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    depends_on:
+      - movie-search-service
+
+volumes:
+  postgres_data:
+    name: feature-flags-postgres-dev
+  rabbitmq_data:
+    name: feature-flags-rabbitmq-dev
+  feature_flag_service_m2:
+    name: feature-flags-service-m2-dev
+  movie_search_service_m2:
+    name: movie-search-service-m2-dev
+
+networks:
+  default:
+    name: feature-flags-network-dev

@@ -1,0 +1,126 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: feature-flags-postgres
+    environment:
+      POSTGRES_DB: feature_flags
+      POSTGRES_USER: feature_flags_user
+      POSTGRES_PASSWORD: feature_flags_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U feature_flags_user -d feature_flags"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: feature-flags-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: feature_flags_user
+      RABBITMQ_DEFAULT_PASS: feature_flags_password
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+  # Feature Flag Service
+  feature-flag-service:
+    build:
+      context: ./feature-flag-service
+      dockerfile: Dockerfile
+    container_name: feature-flag-service
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/feature_flags
+      SPRING_DATASOURCE_USERNAME: feature_flags_user
+      SPRING_DATASOURCE_PASSWORD: feature_flags_password
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: feature_flags_user
+      SPRING_RABBITMQ_PASSWORD: feature_flags_password
+      OMDB_API_KEY: ${OMDB_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "${FEATURE_FLAG_API_URL}/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Movie Search Service
+  movie-search-service:
+    build:
+      context: ./movie-search-service
+      dockerfile: Dockerfile
+    container_name: movie-search-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: feature_flags_user
+      SPRING_RABBITMQ_PASSWORD: feature_flags_password
+      OMDB_API_KEY: ${OMDB_API_KEY:-demo_key}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "${MOVIES_API_URL}/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Feature Flag Frontend
+  feature-flag-frontend:
+    build:
+      context: ./feature-flag-frontend
+      dockerfile: Dockerfile
+    container_name: feature-flag-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_URL: ${FEATURE_FLAG_API_URL}
+    depends_on:
+      feature-flag-service:
+        condition: service_healthy
+
+  # Movie Search Frontend
+  movie-search-frontend:
+    build:
+      context: ./movie-search-frontend
+      dockerfile: Dockerfile
+    container_name: movie-search-frontend
+    ports:
+      - "3001:3000"
+    environment:
+      REACT_APP_API_URL: ${MOVIES_API_URL}
+    depends_on:
+      movie-search-service:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+
+networks:
+  default:
+    name: feature-flags-network
