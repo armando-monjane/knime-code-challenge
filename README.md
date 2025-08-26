@@ -52,12 +52,13 @@ A microservices-based application demonstrating feature flag management and movi
 
 1. **Clone and Setup**
    ```bash
-   git clone <repository-url>
-   cd code-challenge
+   git clone https://github.com/armando-monjane/knime-code-challenge.git
+   cd knime-code-challenge
    ```
 
 2. **Run with Docker Compose**
    ```bash
+   cp .env.example .env
    docker-compose up -d
    ```
 
