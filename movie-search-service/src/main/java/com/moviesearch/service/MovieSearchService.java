@@ -23,9 +23,14 @@ public class MovieSearchService {
     private String apiKey;
 
     @Autowired
-    public MovieSearchService(WebClient.Builder webClientBuilder, FeatureFlagService featureFlagService) {
-        this.webClient = webClientBuilder.baseUrl("http://www.omdbapi.com").build();
+    public MovieSearchService(WebClient webClient, FeatureFlagService featureFlagService) {
+        this.webClient = webClient;
         this.featureFlagService = featureFlagService;
+    }
+
+    // Secondary constructor to support tests providing a WebClient.Builder
+    public MovieSearchService(WebClient.Builder webClientBuilder, FeatureFlagService featureFlagService) {
+        this(webClientBuilder.baseUrl("http://www.omdbapi.com").build(), featureFlagService);
     }
 
     public Mono<MovieSearchResponse> searchMovies(String title) {
@@ -36,10 +41,7 @@ public class MovieSearchService {
         }
 
         return webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .queryParam("s", title)
-                        .queryParam("apikey", apiKey)
-                        .build())
+                .uri("?s={title}&apikey={apiKey}", title, apiKey)
                 .retrieve()
                 .bodyToMono(MovieSearchResponse.class)
                 .doOnError(error -> {
@@ -59,10 +61,7 @@ public class MovieSearchService {
         }
 
         return webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .queryParam("i", imdbId)
-                        .queryParam("apikey", apiKey)
-                        .build())
+                .uri("?i={imdbId}&apikey={apiKey}", imdbId, apiKey)
                 .retrieve()
                 .bodyToMono(MovieSearchResponse.class)
                 .doOnError(error -> {

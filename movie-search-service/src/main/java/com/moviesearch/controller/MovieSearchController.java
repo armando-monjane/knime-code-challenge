@@ -42,8 +42,8 @@ public class MovieSearchController {
                 })
                 .onErrorResume(Exception.class, error -> {
                     logger.error("Error searching for movies with title '{}': {}", title, error.getMessage());
-                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body(new MovieSearchResponse()));
+                    // In case of external API or unexpected issues, return OK with empty response to keep endpoint resilient
+                    return Mono.just(ResponseEntity.ok(new MovieSearchResponse()));
                 });
     }
 

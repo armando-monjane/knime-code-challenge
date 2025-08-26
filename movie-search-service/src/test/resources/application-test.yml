@@ -1,0 +1,20 @@
+spring:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        auto-startup: false  # Disable auto-startup of RabbitMQ listeners in tests
+
+omdb:
+  api:
+    base-url: http://www.omdbapi.com
+    key: test_key
+    timeout: 5000ms
+
+logging:
+  level:
+    com.moviesearch: DEBUG
+    org.springframework.web: DEBUG

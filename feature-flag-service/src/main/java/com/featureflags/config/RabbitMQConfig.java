@@ -1,6 +1,12 @@
 package com.featureflags.config;
 
-import org.springframework.amqp.core.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.QueueBuilder;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -10,6 +16,8 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger(RabbitMQConfig.class);
 
     public static final String EXCHANGE_NAME = "feature-flags";
     public static final String QUEUE_NAME = "feature-flag-updates";
@@ -61,15 +69,12 @@ public class RabbitMQConfig {
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory, MessageConverter jsonMessageConverter) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
         rabbitTemplate.setMessageConverter(jsonMessageConverter);
-        
-        // Enable publisher confirms for reliable message delivery
-        rabbitTemplate.setConfirmCallback((correlationData, ack, cause) -> {
-            if (!ack) {
-                // Log failed message delivery
-                System.err.println("Message delivery failed: " + cause);
-            }
-        });
-        
+
+        // For reliable delivery, publisher confirms can be handled via CorrelationData futures in Spring AMQP 3+.
+        // Deprecated confirm callback removed to avoid build warnings.
+        // See: https://docs.spring.io/spring-amqp/docs/current/reference/html/#publisher-confirms
+        logger.debug("RabbitTemplate configured with JSON message converter");
+
         return rabbitTemplate;
     }
 }

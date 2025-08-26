@@ -11,7 +11,7 @@ const FeatureFlagList: React.FC = () => {
     try {
       setLoading(true);
       const flags = await featureFlagService.getAllFlags();
-      setFlags(flags);
+      setFlags(flags || []);
       setError(null);
     } catch (err) {
       setError('Failed to fetch feature flags');
@@ -24,7 +24,7 @@ const FeatureFlagList: React.FC = () => {
   const toggleFlag = async (id: number) => {
     try {
       const updatedFlag = await featureFlagService.toggleFlag(id);
-      setFlags(flags.map(flag => 
+      setFlags(flags.map((flag: FeatureFlag) => 
         flag.id === id ? updatedFlag : flag
       ));
     } catch (err) {
@@ -40,7 +40,7 @@ const FeatureFlagList: React.FC = () => {
 
     try {
       await featureFlagService.deleteFlag(id);
-      setFlags(flags.filter(flag => flag.id !== id));
+      setFlags(flags.filter((flag: FeatureFlag) => flag.id !== id));
     } catch (err) {
       setError('Failed to delete feature flag');
       console.error('Error deleting flag:', err);
@@ -97,7 +97,7 @@ const FeatureFlagList: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {flags.map((flag) => (
+              {flags && flags.map((flag: FeatureFlag) => (
                 <tr key={flag.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{flag.name}</div>
@@ -148,7 +148,7 @@ const FeatureFlagList: React.FC = () => {
           </table>
         </div>
 
-        {flags.length === 0 && (
+        {flags && flags.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-500 text-lg">No feature flags found</div>
             <div className="text-gray-400 text-sm mt-2">

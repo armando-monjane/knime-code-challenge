@@ -17,7 +17,7 @@ public class MovieSearchResponse {
     @JsonProperty("Error")
     private String error;
 
-    // Constructors
+
     public MovieSearchResponse() {}
 
     public MovieSearchResponse(List<Movie> search, String totalResults, String response) {
@@ -26,7 +26,6 @@ public class MovieSearchResponse {
         this.response = response;
     }
 
-    // Getters and Setters
     public List<Movie> getSearch() {
         return search;
     }
